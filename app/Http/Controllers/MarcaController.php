@@ -36,7 +36,7 @@ class MarcaController extends Controller
             $marcaRepository->selectAtributos($request->atributos);
         }
 
-        return response()->json($marcaRepository->getResultado(), 200);
+        return response()->json($marcaRepository->getResultadoPaginado(4), 200);
     }
 
     /**
@@ -121,15 +121,17 @@ class MarcaController extends Controller
             $request->validate($marca->rules(), $marca->feedback());
         }
 
-        if ($request->file('imagem')) {
-            Storage::disk('public')->delete($marca->imagem);
+        $marca->fill($request->all());
+
+        if($request->file('imagem')){
+            if ($request->file('imagem')) {
+                Storage::disk('public')->delete($marca->imagem);
+            }
+            $imagem = $request->file('imagem');
+            $imagem_urn = $imagem->store('imagens', 'public');
+            $marca->imagem = $imagem_urn;
         }
 
-        $imagem = $request->file('imagem');
-        $imagem_urn = $imagem->store('imagens', 'public');
-
-        $marca->fill($request->all());
-        $marca->imagem = $imagem_urn;
         $marca->save();
 
         return response()->json($marca, 200);
